@@ -75,7 +75,7 @@ def main():
 
         img = labelme.utils.img_data_to_arr(label_file.imageData)
         imgviz.io.imsave(out_img_file, img)
-
+        print(img.shape)
         maker = lxml.builder.ElementMaker()
         xml = maker.annotation(
             maker.folder(),
@@ -86,7 +86,11 @@ def main():
             maker.size(
                 maker.height(str(img.shape[0])),
                 maker.width(str(img.shape[1])),
-                maker.depth(str(img.shape[2])),
+                maker.depth(str(img.shape[2]))  
+            ) if len(img.shape) >= 3 else 
+            maker.size(
+                maker.height(str(img.shape[0])),
+                maker.width(str(img.shape[1]))
             ),
             maker.segmented(),
         )
