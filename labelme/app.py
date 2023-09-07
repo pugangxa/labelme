@@ -14,6 +14,7 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy import QtWidgets
+from qtpy.QtWidgets import QMessageBox, QInputDialog
 
 from labelme import __appname__
 from labelme import PY2
@@ -1968,6 +1969,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.endMove(copy=False)
         self.setDirty()
 
+    def check_directory_validity(self, directory_path):
+        detected_path = os.path.join(directory_path, "detected")
+        labels_path = os.path.join(directory_path, "labels")
+        nodetect_path = os.path.join(directory_path, "nodetect")
+
+        detected_path_exist = False
+        nodetected_path_exist = False
+
+        if os.path.exists(detected_path):
+            detected_path_exist = True
+
+        if os.path.exists(nodetect_path):
+            nodetected_path_exist = True
+
+        if not (detected_path_exist or nodetected_path_exist):
+            return False, "The directory must contain either 'detected' or 'nodetect' folder.", False, False
+
+        if os.path.exists(detected_path) and not os.path.exists(labels_path):
+            return False, "When 'detected' folder exists, 'labels' folder must also exist.", False, False
+
+        return True, "Directory is valid.", detected_path_exist, nodetected_path_exist
+
     def openDirDialog(self, _value=False, dirpath=None):
         if not self.mayContinue():
             return
@@ -1989,7 +2012,37 @@ class MainWindow(QtWidgets.QMainWindow):
                 | QtWidgets.QFileDialog.DontResolveSymlinks,
             )
         )
-        self.importDirImages(targetDirPath)
+        if not targetDirPath:
+            QMessageBox.information(None, "No Directory Selected", "No directory was selected.")
+            return
+
+        # Check the validity of the selected directory
+        is_valid, message, detected_path_exist, nodetected_path_exist = self.check_directory_validity(targetDirPath)
+
+        folders_to_open = []
+
+        if detected_path_exist:
+            folders_to_open.append("detected")
+
+        if nodetected_path_exist:
+            folders_to_open.append("nodetect")
+
+        if is_valid:
+            # Prompt the user to choose 'detected' or 'nodetect' folder
+            choice, ok = QInputDialog.getItem(None, "Choose Folder", "Choose a folder to open:", folders_to_open, 0, False)
+
+            if ok:
+                if choice == "detected":
+                    self.dirMode = "detected"
+                if choice == "nodetect":
+                    self.dirMode = "nodetect"
+                
+                chosen_folder = os.path.join(targetDirPath, choice)
+                self.output_dir = os.path.join(targetDirPath, "labels")
+                self.importDirImages(chosen_folder)
+        else:
+            QMessageBox.critical(None, "Invalid Directory", message)
+        
 
     @property
     def imageList(self):
