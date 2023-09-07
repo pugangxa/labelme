@@ -220,13 +220,6 @@ class MainWindow(QtWidgets.QMainWindow):
             "quit",
             self.tr("Quit application"),
         )
-        open_ = action(
-            self.tr("&Open"),
-            self.openFile,
-            shortcuts["open"],
-            "open",
-            self.tr("Open image or label file"),
-        )
         opendir = action(
             self.tr("&Open Dir"),
             self.openDirDialog,
@@ -267,12 +260,12 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
 
-        deleteFile = action(
-            self.tr("&Delete File"),
+        genReport = action(
+            self.tr("生成报表"),
             self.deleteFile,
-            shortcuts["delete_file"],
-            "delete",
-            self.tr("Delete current label file"),
+            shortcuts["gen_report"],
+            "new",
+            self.tr("生成报表"),
             enabled=False,
         )
 
@@ -294,13 +287,6 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         saveAuto.setChecked(self._config["auto_save"])
 
-        saveWithImageData = action(
-            text="Save With Image Data",
-            slot=self.enableSaveImageWithData,
-            tip="Save image data in label file",
-            checkable=True,
-            checked=self._config["store_data"],
-        )
 
         close = action(
             "&Close",
@@ -542,13 +528,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # Store actions for further handling.
         self.actions = utils.struct(
             saveAuto=saveAuto,
-            saveWithImageData=saveWithImageData,
             changeOutputDir=changeOutputDir,
             save=save,
             saveAs=saveAs,
-            open=open_,
             close=close,
-            deleteFile=deleteFile,
             toggleKeepPrevMode=toggle_keep_prev_mode,
             delete=delete,
             edit=edit,
@@ -571,7 +554,8 @@ class MainWindow(QtWidgets.QMainWindow):
             zoomActions=zoomActions,
             openNextImg=openNextImg,
             openPrevImg=openPrevImg,
-            fileMenuActions=(open_, opendir, save, saveAs, close, quit),
+            genReport=genReport,
+            fileMenuActions=(opendir, save, saveAs, close, quit),
             tool=(),
             # XXX: need to add some actions here to activate the shortcut
             editMenu=(
@@ -622,7 +606,6 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.file,
             (
-                open_,
                 openNextImg,
                 openPrevImg,
                 opendir,
@@ -631,9 +614,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 saveAs,
                 saveAuto,
                 changeOutputDir,
-                saveWithImageData,
                 close,
-                deleteFile,
+                genReport,
                 None,
                 quit,
             ),
@@ -679,12 +661,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tools = self.toolbar("Tools")
         # Menu buttons on Left
         self.actions.tool = (
-            open_,
             opendir,
             openNextImg,
             openPrevImg,
             save,
-            deleteFile,
+            genReport,
             None,
             createMode,
             editMode,
@@ -874,7 +855,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
     def tutorial(self):
-        url = "https://github.com/wkentaro/labelme/tree/main/examples/tutorial"  # NOQA
+        url = "https://www.sxjkjcpt.com"  # NOQA
         webbrowser.open(url)
 
     def toggleDrawingSensitive(self, drawing=True):
