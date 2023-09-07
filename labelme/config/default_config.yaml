@@ -5,11 +5,11 @@ keep_prev: false
 keep_prev_scale: false
 keep_prev_brightness: false
 keep_prev_contrast: false
-logger_level: info
+logger_level: debug
 
 flags: null
 label_flags: null
-labels: null
+labels: ["kuaizhuangliefeng","hengxiangliefeng","tiaozhuangxiubu","kuaizhuangxiubu","zongxiangliefeng","junlie","kengcao"]
 file_search: null
 sort_labels: true
 validate_label: null
