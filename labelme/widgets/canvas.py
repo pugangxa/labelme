@@ -33,7 +33,7 @@ class Canvas(QtWidgets.QWidget):
     CREATE, EDIT = 0, 1
 
     # polygon, rectangle, line, or point
-    _createMode = "polygon"
+    _createMode = "rectangle"
 
     _fill_drawing = False
 
