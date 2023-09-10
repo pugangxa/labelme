@@ -263,7 +263,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         genReport = action(
             self.tr("生成报表"),
-            self.deleteFile,
+            self.generateReport,
             shortcuts["gen_report"],
             "new",
             self.tr("生成报表"),
@@ -589,6 +589,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 createMode,
                 editMode,
                 brightnessContrast,
+                genReport,
             ),
             onShapesPresent=(saveAs, hideAll, showAll),
         )
@@ -1661,6 +1662,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.imageList.index(current_filename)
             )
             self.fileListWidget.repaint()
+    
+    def generateReport(self):
+        if not self.mayContinue():
+            return
+        mb = QtWidgets.QMessageBox
+        msg = self.tr(
+            "你已经完成了人工修正, 将要生成报表, "
+            "确认么?"
+        )
+        answer = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
+        if answer != mb.Yes:
+            return
+        targetDirPath = str(
+            QtWidgets.QFileDialog.getExistingDirectory(
+                self,
+                self.tr("%s - Open Directory") % __appname__,
+                self.output_dir + "/..",
+                QtWidgets.QFileDialog.ShowDirsOnly
+                | QtWidgets.QFileDialog.DontResolveSymlinks,
+            )
+        )
+        if not targetDirPath:
+            QMessageBox.information(None, "No Directory Selected", "No directory was selected.")
+            return
+        
+        # TODO, genReport logic here
+
 
     def saveFile(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
