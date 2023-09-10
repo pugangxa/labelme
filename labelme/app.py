@@ -270,6 +270,15 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
 
+        toggleDir = action(
+            self.tr("切换文件夹"),
+            self.toggleDir,
+            shortcuts["toggle_dir"],
+            "fit",
+            self.tr("切换检测/未检测文件夹"),
+            enabled=False,
+        )
+
         changeOutputDir = action(
             self.tr("&Change Output Dir"),
             slot=self.changeOutputDirDialog,
@@ -555,6 +564,7 @@ class MainWindow(QtWidgets.QMainWindow):
             zoomActions=zoomActions,
             openNextImg=openNextImg,
             openPrevImg=openPrevImg,
+            toggleDir=toggleDir,
             genReport=genReport,
             fileMenuActions=(opendir, save, saveAs, close, quit),
             tool=(),
@@ -589,6 +599,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 createMode,
                 editMode,
                 brightnessContrast,
+                toggleDir,
                 genReport,
             ),
             onShapesPresent=(saveAs, hideAll, showAll),
@@ -617,6 +628,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 saveAuto,
                 changeOutputDir,
                 close,
+                toggleDir,
                 genReport,
                 None,
                 quit,
@@ -667,6 +679,7 @@ class MainWindow(QtWidgets.QMainWindow):
             openNextImg,
             openPrevImg,
             save,
+            toggleDir,
             genReport,
             None,
             createMode,
@@ -1689,6 +1702,24 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # TODO, genReport logic here
 
+    def toggleDir(self):
+        if not self.mayContinue():
+            return
+
+        # Check the validity of the selected directory
+        _, _, detected_path_exist, nodetected_path_exist = self.check_directory_validity(self.targetDirPath)
+
+        if self.dirMode == "detected" and nodetected_path_exist:
+            chosen_folder = os.path.join(self.targetDirPath, "nodetect")
+            self.dirMode = "nodetect"
+            self.importDirImages(chosen_folder)
+        elif self.dirMode == "nodetect" and detected_path_exist:
+            chosen_folder = os.path.join(self.targetDirPath, "detected")
+            self.dirMode = "detected"
+            self.importDirImages(chosen_folder)
+        else:
+            QMessageBox.critical(None, "Invalid Directory", "文件夹不存在")
+        
 
     def saveFile(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
@@ -1965,6 +1996,11 @@ class MainWindow(QtWidgets.QMainWindow):
             choice, ok = QInputDialog.getItem(None, "Choose Folder", "Choose a folder to open:", folders_to_open, 0, False)
 
             if ok:
+                if choice == "detected":
+                    self.dirMode = "detected"
+                if choice == "nodetect":
+                    self.dirMode = "nodetect"
+                self.targetDirPath = targetDirPath
                 chosen_folder = os.path.join(targetDirPath, choice)
                 self.output_dir = os.path.join(targetDirPath, "labels")
                 self.importDirImages(chosen_folder)

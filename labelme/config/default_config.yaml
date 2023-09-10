@@ -96,6 +96,7 @@ shortcuts:
   fit_width: Ctrl+Shift+F
 
   gen_report: Ctrl+N
+  toggle_dir: Ctrl+_
   create_rectangle: Ctrl+R
   create_circle: null
   create_line: null
