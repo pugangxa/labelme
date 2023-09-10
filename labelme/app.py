@@ -6,6 +6,7 @@ import math
 import os
 import os.path as osp
 import re
+import shutil
 import webbrowser
 
 import imgviz
@@ -806,11 +807,6 @@ class MainWindow(QtWidgets.QMainWindow):
             title = "{} - {}".format(title, self.filename)
         self.setWindowTitle(title)
 
-        if self.hasLabelFile():
-            self.actions.deleteFile.setEnabled(True)
-        else:
-            self.actions.deleteFile.setEnabled(False)
-
     def toggleActions(self, value=True):
         """Enable/Disable widgets which depend on an opened image."""
         for z in self.actions.zoomActions:
@@ -1115,7 +1111,7 @@ class MainWindow(QtWidgets.QMainWindow):
             item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
             self.flag_widget.addItem(item)
 
-    def saveLabels(self, filename):
+    def saveLabels(self, filename, imagePathIn=None):
         lf = LabelFile()
 
         def format_shape(s):
@@ -1140,6 +1136,8 @@ class MainWindow(QtWidgets.QMainWindow):
             flags[key] = flag
         try:
             imagePath = osp.relpath(self.imagePath, osp.dirname(filename))
+            if imagePathIn is not None:
+                imagePath = imagePathIn
             imageData = self.imageData if self._config["store_data"] else None
             if osp.dirname(filename) and not osp.exists(osp.dirname(filename)):
                 os.makedirs(osp.dirname(filename))
@@ -1666,6 +1664,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def saveFile(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
+        # if no label then delete labelFile, move from detected to nodetect
+        if len(self.labelList) == 0:
+            if self.labelFile:   
+                original_filename = self.filename
+                self.deleteFile() 
+                shutil.move(original_filename, self.currentPath()+"/../nodetect")
+                return
+
         if self.labelFile:
             # DL20180323 - overwrite when in directory
             self._saveFile(self.labelFile.filename)
@@ -1673,7 +1679,25 @@ class MainWindow(QtWidgets.QMainWindow):
             self._saveFile(self.output_file)
             self.close()
         else:
-            self._saveFile(self.saveFileDialog())
+            # for nodetect, should save to labels dir directly
+            mb = QtWidgets.QMessageBox
+            msg = self.tr(
+                "你将要增加标注, 并移动文件到detected文件夹, "
+                "确认么?"
+            )
+            answer = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
+            if answer != mb.Yes:
+                return
+            label_file = osp.splitext(self.filename)[0] + ".json"
+            if self.output_dir:
+                label_file_without_path = osp.basename(label_file)
+                label_file = osp.join(self.output_dir, label_file_without_path)            
+            self._saveFile(label_file, self.currentPath()+"/../detected/" + osp.basename(self.filename))
+            # move from nodetect to detected
+            shutil.move(self.filename, self.currentPath()+"/../detected")
+            item = self.fileListWidget.currentRow()
+            self.fileListWidget.takeItem(item)
+            self.resetState()
 
     def saveFileAs(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
@@ -1713,8 +1737,13 @@ class MainWindow(QtWidgets.QMainWindow):
             filename, _ = filename
         return filename
 
-    def _saveFile(self, filename):
-        if filename and self.saveLabels(filename):
+    def _saveFile(self, filename, imagePathIn=None):
+        out = False
+        if imagePathIn is not None:
+            out = self.saveLabels(filename, imagePathIn)
+        else:
+            out = self.saveLabels(filename)
+        if filename and out:
             self.addRecentFile(filename)
             self.setClean()
 
@@ -1732,6 +1761,9 @@ class MainWindow(QtWidgets.QMainWindow):
             label_file = self.filename
         else:
             label_file = osp.splitext(self.filename)[0] + ".json"
+            if self.output_dir:
+                label_file_without_path = osp.basename(label_file)
+                label_file = osp.join(self.output_dir, label_file_without_path)
 
         return label_file
 
@@ -1749,9 +1781,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if osp.exists(label_file):
             os.remove(label_file)
             logger.info("Label file is removed: {}".format(label_file))
-
-            item = self.fileListWidget.currentItem()
-            item.setCheckState(Qt.Unchecked)
+            item = self.fileListWidget.currentRow()
+            self.dirty = False
+            self.fileListWidget.takeItem(item)
 
             self.resetState()
 
@@ -1905,11 +1937,6 @@ class MainWindow(QtWidgets.QMainWindow):
             choice, ok = QInputDialog.getItem(None, "Choose Folder", "Choose a folder to open:", folders_to_open, 0, False)
 
             if ok:
-                if choice == "detected":
-                    self.dirMode = "detected"
-                if choice == "nodetect":
-                    self.dirMode = "nodetect"
-                
                 chosen_folder = os.path.join(targetDirPath, choice)
                 self.output_dir = os.path.join(targetDirPath, "labels")
                 self.importDirImages(chosen_folder)
