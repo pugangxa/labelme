@@ -16,6 +16,8 @@ from .shape import polygons_to_mask
 from .shape import shape_to_mask
 from .shape import shapes_to_label
 
+from .report import generate_report
+
 from .qt import newIcon
 from .qt import newButton
 from .qt import newAction

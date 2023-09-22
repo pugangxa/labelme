@@ -1699,8 +1699,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if not targetDirPath:
             QMessageBox.information(None, "No Directory Selected", "No directory was selected.")
             return
-        
-        # TODO, genReport logic here
+        fileIndexPath = os.path.join(self.targetDirPath, "fileindex.txt")
+        reportName = os.path.join(targetDirPath, "report.xlsx")
+        utils.generate_report(self.output_dir, fileIndexPath, reportName)
+
 
     def toggleDir(self):
         if not self.mayContinue():
