@@ -1701,7 +1701,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         fileIndexPath = os.path.join(self.targetDirPath, "fileindex.txt")
         reportName = os.path.join(targetDirPath, "report.xlsx")
-        utils.generate_report(self.output_dir, fileIndexPath, reportName)
+        utils.generate_report(self.output_dir, fileIndexPath, reportName, self._config["imageHeight"],  self._config["imageWidth"])
 
 
     def toggleDir(self):

@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import os
 import math
+import openpyxl
 
 def read_fileindex(fileindex_path):
     fileindex_map = {}
@@ -12,10 +13,11 @@ def read_fileindex(fileindex_path):
             if len(parts) == 3:
                 image_filename = parts[1]
                 pile_number = parts[0].split(".")[0]
+                pile_number = pile_number.replace("+", "")[:-3]
                 fileindex_map[pile_number] = image_filename
     return fileindex_map
 
-def process_label_file(label_file, fileindex_map):
+def process_label_file(label_file, fileindex_map, imageHeight, imageWidth):
     with open(label_file, 'r') as f:
         label_data = json.load(f)
 
@@ -31,14 +33,15 @@ def process_label_file(label_file, fileindex_map):
         return None
 
     report_entries = []
+    length_per_pixer = imageHeight / label_data['imageHeight'] 
+    width_per_pixer = imageWidth / label_data['imageWidth'] 
 
     for shape in label_data['shapes']:
         label = get_name(shape['label'])
         points = shape['points']
-        area = count_area(shape['label'], points)
-        length = abs(points[0][0] - points[1][0])
-        width = abs(points[0][1] - points[1][1])
-
+        length = abs(points[0][0] - points[1][0]) * length_per_pixer
+        width = abs(points[0][1] - points[1][1]) * width_per_pixer
+        area = count_area(shape['label'], length, width)
         report_entries.append({
             '桩号': pile_number,
             '病害名称': label,
@@ -49,13 +52,8 @@ def process_label_file(label_file, fileindex_map):
 
     return report_entries
 
-def count_area(class_id,points):
+def count_area(class_id, height ,width):
     #current classes: ["kuaizhuangliefeng", "hengxiangliefeng", "tiaozhuangxiubu", "kuaizhuangxiubu", "zongxiangliefeng", "junlie", "kengcao"]
-    x1, y1 = points[0]
-    x2, y2 = points[1]
-    width = abs(x2 - x1)
-    height = abs(y2 - y1)
-
     if class_id == "kuaizhuangliefeng":
         return width * height
     elif class_id == "hengxiangliefeng":
@@ -88,24 +86,80 @@ def get_name(class_id):
     elif class_id == "kengcao": 
         return "坑槽"
     
-def generate_report(label_dir, fileindex_path, output_path):
-    # 读取fileindex.txt文件
+def generate_report(label_dir, fileindex_path, output_path, imageHeight, imageWidth):
     fileindex_map = read_fileindex(fileindex_path)
-
-    # 遍历label文件夹，生成报表数据
+    df_10m_report = pd.DataFrame(columns=['起点', '终点', '龟裂(㎡)', '块状裂缝(㎡)', '纵向裂缝(㎡)', '横向裂缝(㎡)', '坑槽(㎡)', '块状修补(㎡)', '条状修补(㎡)'])
+    current_start_pile = None
+    current_end_pile = None
+    current_area = {
+        '龟裂(㎡)': 0,
+        '块状裂缝(㎡)': 0,
+        '纵向裂缝(㎡)': 0,
+        '横向裂缝(㎡)': 0,
+        '坑槽(㎡)': 0,
+        '块状修补(㎡)': 0,
+        '条状修补(㎡)': 0
+    }
+    lines = list(fileindex_map.keys())
     report_data = []
-    for label_file in os.listdir(label_dir):
-        if label_file.endswith('.json'):
-            label_file_path = os.path.join(label_dir, label_file)
-            report_entries = process_label_file(label_file_path, fileindex_map)
+    for i, pile_number in enumerate(lines):
+        image_filename = fileindex_map[pile_number]
+        label_file_path = os.path.join(label_dir, image_filename.replace(".jpg", ".json"))
+        if os.path.exists(label_file_path):
+            report_entries = process_label_file(label_file_path, fileindex_map, imageHeight, imageWidth)
             if report_entries:
                 report_data.extend(report_entries)
-
-    # 创建DataFrame
+                for entry in report_entries:
+                    label = entry['病害名称'] + '(㎡)'
+                    area = entry['面积(㎡)']
+                    if label in current_area:
+                        current_area[label] += area
+        if i % 5 == 0:
+            current_start_pile = str(int(pile_number) - 2)
+        if i % 5 == 4 or i == len(lines) - 1:
+            current_end_pile = pile_number
+            df_10m_report = pd.concat([df_10m_report, pd.DataFrame([{
+                '起点': current_start_pile,
+                '终点': current_end_pile,
+                **current_area
+            }])], ignore_index=True)
+            # 重置起点、终点和病害统计数据
+            current_start_pile = None
+            current_end_pile = None
+            current_area = {
+                '龟裂(㎡)': 0,
+                '块状裂缝(㎡)': 0,
+                '纵向裂缝(㎡)': 0,
+                '横向裂缝(㎡)': 0,
+                '坑槽(㎡)': 0,
+                '块状修补(㎡)': 0,
+                '条状修补(㎡)': 0
+            }
     df = pd.DataFrame(report_data)
-
-    # 添加序号列
     df.insert(0, '序号', range(1, len(df) + 1))
+    writer = pd.ExcelWriter(output_path, engine='openpyxl')
 
     # 生成报表
-    df.to_excel(output_path, index=False)
+    df.to_excel(writer, index=False, sheet_name='病害明细')
+    title_sheet = writer.book['病害明细']
+    title_sheet.insert_rows(0, amount=1) 
+    title_sheet['A1'] = "病害明细"
+    title_sheet.merge_cells('A1:F1')
+
+    title_cell = title_sheet['A1']
+    title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+
+
+    df_10m_report.to_excel(writer, index=False, sheet_name='路面损坏十米统计')
+    title_sheet = writer.book['路面损坏十米统计']
+    title_sheet.insert_rows(0, amount=1) 
+    title_sheet['A1'] = "路面损坏十米统计"
+    title_sheet.merge_cells('A1:I1')
+
+    title_cell = title_sheet['A1']
+    title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+
+
+    writer.save()
+
+
