@@ -155,7 +155,6 @@ def generate_report(label_dir, fileindex_path, output_path, imageHeight, imageWi
     title_sheet.insert_rows(0, amount=1) 
     title_sheet['A1'] = "路面损坏十米统计"
     title_sheet.merge_cells('A1:I1')
-
     title_cell = title_sheet['A1']
     title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
 

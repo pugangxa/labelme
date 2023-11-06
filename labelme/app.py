@@ -1701,8 +1701,13 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         fileIndexPath = os.path.join(self.targetDirPath, "fileindex.txt")
         reportName = os.path.join(targetDirPath, "report.xlsx")
-        utils.generate_report(self.output_dir, fileIndexPath, reportName, self._config["imageHeight"],  self._config["imageWidth"])
-
+        try:
+            utils.generate_report(self.output_dir, fileIndexPath, reportName, self._config["imageHeight"],  self._config["imageWidth"])
+        except Exception as e:
+            self.errorMessage(self.tr("Error generating report"), self.tr("<p><b>%s</b></p>") %  (e))
+            self.status(self.tr("Error generating report"))
+            return
+        self.status(self.tr("Report generated successfully"))                             
 
     def toggleDir(self):
         if not self.mayContinue():
