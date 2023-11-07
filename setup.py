@@ -32,6 +32,7 @@ def get_install_requires():
         "qtpy!=1.11.2",
         "termcolor",
         "openpyxl",
+        "pandas",
     ]
 
     # Find python binding for qt with priority:
