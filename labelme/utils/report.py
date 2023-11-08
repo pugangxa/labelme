@@ -61,7 +61,7 @@ def count_area(class_id, height ,width):
     elif class_id == "tiaozhuangxiubu": 
         return math.sqrt(width**2 + height**2) * 0.2
     elif class_id == "kuaizhuangxiubu": 
-        return width * height * 0.2
+        return width * height
     elif class_id == "zongxiangliefeng": 
         return math.sqrt(width**2 + height**2) * 0.2
     elif class_id == "junlie":
@@ -159,6 +159,6 @@ def generate_report(label_dir, fileindex_path, output_path, imageHeight, imageWi
     title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
 
 
-    writer.save()
+    writer._save()
 
 
