@@ -18,7 +18,7 @@ def read_fileindex(fileindex_path):
     return fileindex_map
 
 def process_label_file(label_file, fileindex_map, imageHeight, imageWidth):
-    with open(label_file, 'r') as f:
+    with open(label_file, 'r', encoding="utf-8") as f:
         label_data = json.load(f)
 
     image_filename = os.path.basename(label_data['imagePath'])

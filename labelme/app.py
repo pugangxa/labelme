@@ -1734,8 +1734,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(self.labelList) == 0:
             if self.labelFile:   
                 original_filename = self.filename
-                self.deleteFile() 
                 shutil.move(original_filename, self.currentPath()+"/../nodetect")
+                self.deleteFile() 
                 return
 
         if self.labelFile:
@@ -1746,14 +1746,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close()
         else:
             # for nodetect, should save to labels dir directly
-            mb = QtWidgets.QMessageBox
-            msg = self.tr(
-                "你将要增加标注, 并移动文件到detected文件夹, "
-                "确认么?"
-            )
-            answer = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
-            if answer != mb.Yes:
-                return
+            # mb = QtWidgets.QMessageBox
+            # msg = self.tr(
+            #     "你将要增加标注, 并移动文件到detected文件夹, "
+            #     "确认么?"
+            # )
+            # answer = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
+            # if answer != mb.Yes:
+            #     return
             label_file = osp.splitext(self.filename)[0] + ".json"
             if self.output_dir:
                 label_file_without_path = osp.basename(label_file)
@@ -1834,14 +1834,14 @@ class MainWindow(QtWidgets.QMainWindow):
         return label_file
 
     def deleteFile(self):
-        mb = QtWidgets.QMessageBox
-        msg = self.tr(
-            "You are about to permanently delete this label file, "
-            "proceed anyway?"
-        )
-        answer = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
-        if answer != mb.Yes:
-            return
+        # mb = QtWidgets.QMessageBox
+        # msg = self.tr(
+        #     "You are about to permanently delete this label file, "
+        #     "proceed anyway?"
+        # )
+        # answer = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
+        # if answer != mb.Yes:
+        #     return
 
         label_file = self.getLabelFile()
         if osp.exists(label_file):
@@ -1915,19 +1915,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setDirty()
 
     def deleteSelectedShape(self):
-        yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
-        msg = self.tr(
-            "You are about to permanently delete {} polygons, "
-            "proceed anyway?"
-        ).format(len(self.canvas.selectedShapes))
-        if yes == QtWidgets.QMessageBox.warning(
-            self, self.tr("Attention"), msg, yes | no, yes
-        ):
-            self.remLabels(self.canvas.deleteSelected())
-            self.setDirty()
-            if self.noShapes():
-                for action in self.actions.onShapesPresent:
-                    action.setEnabled(False)
+        # yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
+        # msg = self.tr(
+        #     "You are about to permanently delete {} polygons, "
+        #     "proceed anyway?"
+        # ).format(len(self.canvas.selectedShapes))
+        # if yes == QtWidgets.QMessageBox.warning(
+        #     self, self.tr("Attention"), msg, yes | no, yes
+        # ):
+        self.remLabels(self.canvas.deleteSelected())
+        self.setDirty()
+        if self._config["auto_save"] or self.actions.saveAuto.isChecked():
+            self.saveFile()
+        if self.noShapes():
+            for action in self.actions.onShapesPresent:
+                action.setEnabled(False)
 
     def copyShape(self):
         self.canvas.endMove(copy=True)

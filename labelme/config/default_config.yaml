@@ -1,4 +1,4 @@
-auto_save: false
+auto_save: true
 display_label_popup: true
 store_data: false
 keep_prev: false
@@ -88,8 +88,8 @@ shortcuts:
   save_to: null
   delete_file: Ctrl+Delete
 
-  open_next: [D, Ctrl+Shift+D]
-  open_prev: [A, Ctrl+Shift+A]
+  open_next: [down, Ctrl+Shift+D]
+  open_prev: [up, Ctrl+Shift+A]
 
   zoom_in: [Ctrl++, Ctrl+=]
   zoom_out: Ctrl+-
