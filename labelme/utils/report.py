@@ -115,7 +115,7 @@ def generate_report(label_dir, fileindex_path, output_path, imageHeight, imageWi
                     if label in current_area:
                         current_area[label] += area
         if i % 5 == 0:
-            current_start_pile = str(int(pile_number) - 2)
+            current_start_pile = str(int(pile_number) - 2).zfill(len(pile_number))
         if i % 5 == 4 or i == len(lines) - 1:
             current_end_pile = pile_number
             df_10m_report = pd.concat([df_10m_report, pd.DataFrame([{
