@@ -1763,7 +1763,6 @@ class MainWindow(QtWidgets.QMainWindow):
             shutil.move(self.filename, self.currentPath()+"/../detected")
             item = self.fileListWidget.currentRow()
             self.fileListWidget.takeItem(item)
-            self.resetState()
 
     def saveFileAs(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
@@ -1851,7 +1850,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dirty = False
             self.fileListWidget.takeItem(item)
 
-            self.resetState()
+            
 
     # Message Dialogs. #
     def hasLabels(self):
