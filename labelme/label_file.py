@@ -27,6 +27,15 @@ def open(name, mode):
     yield io.open(name, mode, encoding=encoding)
     return
 
+pinyin_labels = ["kuaizhuangliefeng", "hengxiangliefeng", "tiaozhuangxiubu", "kuaizhuangxiubu", "zongxiangliefeng", "junlie", "kengcao"]
+hanzi_labels = ["块状裂缝", "横向裂缝", "条状修补", "块状修补", "纵向裂缝", "龟裂", "坑槽"]
+
+def pinyin_to_hanzi(pinyin):
+   return hanzi_labels[pinyin_labels.index(pinyin)]
+
+def hanzi_to_pinyin(hanzi):
+   return pinyin_labels[hanzi_labels.index(hanzi)]
+
 
 class LabelFileError(Exception):
     pass
@@ -120,7 +129,7 @@ class LabelFile(object):
             )
             shapes = [
                 dict(
-                    label=s["label"],
+                    label=pinyin_to_hanzi(s["label"]),
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
                     flags=s.get("flags", {}),
@@ -184,10 +193,12 @@ class LabelFile(object):
             otherData = {}
         if flags is None:
             flags = {}
+        for shape in shapes:
+            shape["label"] = hanzi_to_pinyin(shape["label"])
         data = dict(
             version=__version__,
             flags=flags,
-            shapes=shapes,
+            shapes=shapes,          
             imagePath=imagePath,
             imageData=imageData,
             imageHeight=imageHeight,

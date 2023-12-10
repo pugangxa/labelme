@@ -9,7 +9,8 @@ logger_level: debug
 
 flags: null
 label_flags: null
-labels: ["kuaizhuangliefeng","hengxiangliefeng","tiaozhuangxiubu","kuaizhuangxiubu","zongxiangliefeng","junlie","kengcao"]
+# labels: ["kuaizhuangliefeng","hengxiangliefeng","tiaozhuangxiubu","kuaizhuangxiubu","zongxiangliefeng","junlie","kengcao"]
+labels: ["块状裂缝","横向裂缝","条状修补","块状修补","纵向裂缝","龟裂","坑槽"]
 file_search: null
 sort_labels: true
 validate_label: null
