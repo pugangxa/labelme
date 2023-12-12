@@ -159,7 +159,7 @@ def main():
             output_file = output
         else:
             output_dir = output
-
+    os.environ["LC_ALL"] = "zh_CN.UTF-8"
     translator = QtCore.QTranslator()
     translator.load(
         QtCore.QLocale.system().name(),
